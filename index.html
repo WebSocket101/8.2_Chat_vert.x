@@ -1,0 +1,74 @@
+<!DOCTYPE>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Chat</title>
+	<style>
+		#chat{
+			width:700px;
+			height:400px;
+			border:1px solid #ddd;
+			overflow-y: scroll;
+			padding:5px;
+		}
+		#message{
+			width:400px;
+		}
+		#chat p{#
+			margin:0 0 0 5px;
+		}
+		.error{
+			color:red;
+		}
+	</style>
+	<script src="/jquery.js"></script>
+</head>
+<body>
+	<h2>Chat</h2>
+	<div id="chat"></div>
+	<input type="text" id="message">
+	<button id="send">Nachricht senden</button>
+	<script>
+	var msg = {
+		name:"",
+		message: ""
+	}
+	var ws = new WebSocket('ws://'+window.location.host);
+
+	(function setName(){
+		msg.name = prompt("Willkommen im Chat!  Wie ist dein Name?", "");
+		if(msg.name == ""){
+			setName();
+		}
+	})();
+
+	$('#message').keydown(function(evt){
+		if(evt.which==13){
+			msg.message = $('#message').val();
+			ws.send(JSON.stringify(msg));
+			msg.message = "";
+			$('#message').val("");
+		}
+	});
+	
+	$('#send').click(function(){
+		msg.message = $('#message').val();
+		ws.send(JSON.stringify(msg));
+		msg.message = "";
+		$('#message').val("");
+	});
+	
+	ws.onmessage = function(evt){
+		try{
+			var message = JSON.parse(evt.data);
+			$('#chat').append('<p><b>'+message.name+'</b>: ' +message.message+'<p>');
+		}
+
+		catch(e){
+			$('#chat').append('<p class="error">invalid message</p>');
+		}
+		
+	}
+	</script>
+</body>
+</html>
